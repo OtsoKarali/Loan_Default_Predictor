@@ -1,19 +1,9 @@
-#!/usr/bin/env python
-# coding: utf-8
-
 # # Loan Default LLM Predictor
-
-# In[3]:
-
 
 #This is a hackathon project made by Otso Karali on Saturday, October 19th, 2024.
 # The dataset being used was provided from Kaggle - (https://www.kaggle.com/datasets/mishra5001/credit-card/data?select=application_data.csv)
 
-
-# In[4]:
-
-
-# Loading the Dataset
+# Imports
 import pandas as pd
 import numpy as np
 from sklearn.impute import SimpleImputer
@@ -28,7 +18,7 @@ from sklearn.metrics import accuracy_score, confusion_matrix, classification_rep
 # Load the dataset
 df = pd.read_csv('/Users/otsok/Downloads/HooHacksDataSet/application_data.csv')
 
-# Pre-Processing
+#### Pre-Processing ####
 
 # Select the relevant columns
 selected_columns = [
@@ -111,8 +101,6 @@ plt.ylabel('Frequency')
 plt.legend()
 plt.show()
 
-# Additional EDA or model building can proceed from here
-
 # Filter the dataset for only defaulters (TARGET == 1)
 defaulters = df_filtered_no_outliers[df_filtered_no_outliers['TARGET'] == 1]
 
@@ -136,10 +124,7 @@ for col in categorical_cols:
 
 
 
-# # Training and Testing Model
-
-# In[5]:
-
+#### Training and Testing Model ####
 
 # Initialize OneHotEncoder
 encoder = OneHotEncoder(drop='first', sparse_output=False)  # drop='first' avoids multicollinearity
@@ -162,19 +147,19 @@ X_test = X_test.drop(columns=categorical_cols)
 # Concatenate the encoded columns back to X_test
 X_test = pd.concat([X_test.reset_index(drop=True), X_encoded_test.reset_index(drop=True)], axis=1)
 
-# Step 6: Train the Random Forest Model with class weights
+#Train the Random Forest Model with class weights
 rf_model = RandomForestClassifier(random_state=42, class_weight='balanced', n_estimators=200, max_depth=20)
 rf_model.fit(X_train, y_train)
 
-# Step 7: Make predictions on the test set
+#Make predictions on the test set
 y_pred = rf_model.predict(X_test)
 
-# Step 8: Evaluate the model
+#Evaluate the model
 accuracy = accuracy_score(y_test, y_pred)
 conf_matrix = confusion_matrix(y_test, y_pred)
 class_report = classification_report(y_test, y_pred)
 
-# Step 9: Print results
+#Print results
 print(f"Accuracy of the Random Forest model: {accuracy}")
 print(f"Confusion Matrix:\n{conf_matrix}")
 print(f"Classification Report:\n{class_report}")
