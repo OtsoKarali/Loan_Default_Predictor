@@ -1,0 +1,23 @@
+Averages for Defaulters (Numerical Columns):
+ AMT_INCOME_TOTAL        148757.545838
+AMT_CREDIT              518363.024767
+AMT_GOODS_PRICE         451879.265820
+AMT_ANNUITY              24929.169865
+DAYS_BIRTH              -14842.674836
+DAYS_REGISTRATION        -4487.252809
+Debt-to-Income Ratio         3.831763
+
+
+Accuracy of the Random Forest model: 0.8790786948176583
+Confusion Matrix:
+[[47922  2676]
+ [ 4002   626]]
+Classification Report:
+              precision    recall  f1-score   support
+
+           0       0.92      0.95      0.93     50598
+           1       0.19      0.14      0.16      4628
+
+    accuracy                           0.88     55226
+   macro avg       0.56      0.54      0.55     55226
+weighted avg       0.86      0.88      0.87     55226
