@@ -1,9 +1,6 @@
-# # Loan Default LLM Predictor
+#### Loan Defaul LLM Predictor *****
 
-#This is a hackathon project made by Otso Karali on Saturday, October 19th, 2024.
-# The dataset being used was provided from Kaggle - (https://www.kaggle.com/datasets/mishra5001/credit-card/data?select=application_data.csv)
-
-# Imports
+# Loading the Dataset
 import pandas as pd
 import numpy as np
 from sklearn.impute import SimpleImputer
@@ -18,13 +15,15 @@ from sklearn.metrics import accuracy_score, confusion_matrix, classification_rep
 # Load the dataset
 df = pd.read_csv('/Users/otsok/Downloads/HooHacksDataSet/application_data.csv')
 
-#### Pre-Processing ####
+
+
+# Pre-Processing
 
 # Select the relevant columns
 selected_columns = [
     'FLAG_OWN_CAR', 'FLAG_OWN_REALTY', 'AMT_INCOME_TOTAL', 'AMT_CREDIT', 
     'AMT_GOODS_PRICE', 'AMT_ANNUITY', 'DAYS_BIRTH', 
-    'CODE_GENDER', 'CNT_CHILDREN', 'NAME_CONTRACT_TYPE', 'DAYS_REGISTRATION', 
+    'CODE_GENDER', 'CNT_CHILDREN', 'NAME_CONTRACT_TYPE', 
     'TARGET'
 ]
 
@@ -53,7 +52,7 @@ def remove_outliers_iqr(df, columns):
     return df_filtered
 
 # Apply IQR-based outlier removal
-numerical_cols = ['AMT_INCOME_TOTAL', 'AMT_CREDIT', 'AMT_GOODS_PRICE', 'AMT_ANNUITY', 'DAYS_BIRTH', 'DAYS_REGISTRATION']
+numerical_cols = ['AMT_INCOME_TOTAL', 'AMT_CREDIT', 'AMT_GOODS_PRICE', 'AMT_ANNUITY', 'DAYS_BIRTH', ]
 df_filtered_no_outliers = remove_outliers_iqr(df_filtered, numerical_cols)
 
 # Create Debt-to-Income Ratio
@@ -67,7 +66,7 @@ scaler = StandardScaler()
 
 # Define the columns to scale
 numerical_cols_to_scale = ['AMT_INCOME_TOTAL', 'AMT_CREDIT', 'AMT_GOODS_PRICE', 
-                           'AMT_ANNUITY', 'Debt-to-Income Ratio', 'DAYS_BIRTH', 'DAYS_REGISTRATION']
+                           'AMT_ANNUITY', 'Debt-to-Income Ratio', 'DAYS_BIRTH', ]
 
 # Create a scaled version of the data for modeling
 df_scaled = df_filtered_no_outliers.copy()  # Copy for model training
@@ -101,12 +100,14 @@ plt.ylabel('Frequency')
 plt.legend()
 plt.show()
 
+# Additional EDA or model building can proceed from here
+
 # Filter the dataset for only defaulters (TARGET == 1)
 defaulters = df_filtered_no_outliers[df_filtered_no_outliers['TARGET'] == 1]
 
 # Select only the numerical columns
 numerical_cols = ['AMT_INCOME_TOTAL', 'AMT_CREDIT', 'AMT_GOODS_PRICE', 'AMT_ANNUITY', 
-                  'DAYS_BIRTH', 'DAYS_REGISTRATION', 'Debt-to-Income Ratio']
+                  'DAYS_BIRTH', 'Debt-to-Income Ratio']
 
 # Calculate the mean for numerical columns of defaulters
 defaulters_mean = defaulters[numerical_cols].mean()
@@ -121,6 +122,7 @@ categorical_cols = ['CODE_GENDER', 'NAME_CONTRACT_TYPE', 'FLAG_OWN_CAR', 'FLAG_O
 for col in categorical_cols:
     print(f"\nValue counts for {col}:")
     print(defaulters[col].value_counts())
+
 
 
 
@@ -147,20 +149,23 @@ X_test = X_test.drop(columns=categorical_cols)
 # Concatenate the encoded columns back to X_test
 X_test = pd.concat([X_test.reset_index(drop=True), X_encoded_test.reset_index(drop=True)], axis=1)
 
-#Train the Random Forest Model with class weights
-rf_model = RandomForestClassifier(random_state=42, class_weight='balanced', n_estimators=200, max_depth=20)
+# Train the Random Forest Model with updated class weights to improve precision
+rf_model = RandomForestClassifier(random_state=42, class_weight={0: 1, 1: 2}, n_estimators=200, max_depth=20)
 rf_model.fit(X_train, y_train)
 
-#Make predictions on the test set
-y_pred = rf_model.predict(X_test)
+# Make predictions on the test set using predicted probabilities
+y_pred_proba = rf_model.predict_proba(X_test)[:, 1]
 
-#Evaluate the model
-accuracy = accuracy_score(y_test, y_pred)
-conf_matrix = confusion_matrix(y_test, y_pred)
-class_report = classification_report(y_test, y_pred)
+# Setting a threshold
+threshold = 0.6
+y_pred_new = (y_pred_proba >= threshold).astype(int)
+
+#Evaluate the model with the new threshold
+accuracy = accuracy_score(y_test, y_pred_new)
+conf_matrix = confusion_matrix(y_test, y_pred_new)
+class_report = classification_report(y_test, y_pred_new)
 
 #Print results
 print(f"Accuracy of the Random Forest model: {accuracy}")
 print(f"Confusion Matrix:\n{conf_matrix}")
 print(f"Classification Report:\n{class_report}")
-
